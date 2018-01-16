@@ -4,11 +4,6 @@ version = "0.0.1"
 authors = ["Nate Tenczar <ntenczar@gmail.com>"]
 
 [dependencies]
-rocket = { git = "https://github.com/SergioBenitez/Rocket", branch = "v0.3" }
-rocket_codegen = { git = "https://github.com/SergioBenitez/Rocket", branch = "v0.3" }
-rocket_contrib = { git = "https://github.com/SergioBenitez/Rocket", branch = "v0.3" }
-
-[patch.crates-io]
-ring = { git = "https://github.com/SergioBenitez/ring", branch = "v0.11" }
-rocket = { git = "https://github.com/SergioBenitez/Rocket", branch = "v0.3" }
-
+rocket = "0.3.6"
+rocket_codegen = "0.3.6"
+rocket_contrib = "0.3.6"
