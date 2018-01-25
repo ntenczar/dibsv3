@@ -1,19 +1,22 @@
-#![feature(plugin)]
+#![feature(plugin, decl_macro)]
 #![plugin(rocket_codegen)]
 
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 
+extern crate r2d2;
+extern crate r2d2_redis;
+extern crate redis;
 extern crate rocket;
 extern crate rocket_contrib;
-extern crate rusqlite;
-extern crate time;
 
 mod queue;
 
-use queue::QueueRequest;
 use rocket_contrib::Json;
 use rocket::response::status;
+
+use queue::{Queue, QueueRequest};
 
 #[post("/queue", format = "application/json", data = "<queue_request>")]
 fn queue(queue_request: Json<QueueRequest>) -> status::Accepted<()> {
@@ -22,5 +25,9 @@ fn queue(queue_request: Json<QueueRequest>) -> status::Accepted<()> {
 }
 
 fn main() {
-    rocket::ignite().mount("/", routes![queue]).launch();
+    let queue = Queue::new();
+    rocket::ignite()
+        .manage(queue)
+        .mount("/", routes![queue])
+        .launch();
 }
