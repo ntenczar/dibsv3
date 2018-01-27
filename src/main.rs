@@ -12,13 +12,17 @@ extern crate rocket_contrib;
 extern crate diesel;
 extern crate dotenv;
 
-mod queue;
+mod db;
+mod models;
+mod request;
+mod schema;
 
 use rocket_contrib::Json;
 use rocket::response::status;
 use rocket::request::State;
 
-use queue::{DibsDB, QueueRequest};
+use db::DibsDB;
+use request::QueueRequest;
 
 #[post("/queue", format = "application/json", data = "<queue_request>")]
 fn queue(

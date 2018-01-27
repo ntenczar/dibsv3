@@ -1,43 +1,15 @@
 use rocket_contrib::Json;
-
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenv::dotenv;
 use std::env;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct QueueRequest {
-    name: String,
-    channel: String,
-}
+use models::Queue;
+use request::QueueRequest;
+use schema::queues::dsl::*;
 
 pub struct DibsDB {
     pool: Pool<ConnectionManager<PgConnection>>,
-}
-
-#[derive(Queryable, Debug)]
-struct Queue {
-    id: i32,
-    title: String,
-    users: Vec<QueueUser>,
-    is_frozen: bool,
-}
-
-impl Queue {
-    pub fn new(channel_name: String) -> Queue {
-        return Queue {
-            id: 0,
-            title: channel_name,
-            users: vec![],
-            is_frozen: false,
-        };
-    }
-}
-
-#[derive(Queryable, Debug)]
-struct QueueUser {
-    user_id: String,
-    timestamp: String,
 }
 
 impl DibsDB {
@@ -66,11 +38,18 @@ impl DibsDB {
     fn get_or_create_queue(&self, name: String) -> Queue {
         match self.get_queue(name.clone()) {
             Some(q) => q,
-            None => Queue::new(name),
+            None => self.create_queue(name),
         }
     }
 
+    fn create_queue(&self, name: String) -> Queue {
+        return Queue::new(name);
+    }
+
     fn get_queue(&self, name: String) -> Option<Queue> {
+        let conn = self.pool.get().unwrap();
+        let q = queues.filter(title.eq(name)).load::<Queue>(&conn);
+        println!("{:?}", q);
         return None;
     }
 }
