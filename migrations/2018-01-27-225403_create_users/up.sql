@@ -1,0 +1,5 @@
+CREATE TABLE users (
+  id VARCHAR(80) PRIMARY KEY,
+  user_id VARCHAR NOT NULL,
+  queue_id VARCHAR(80) REFERENCES queues(id) NOT NULL
+)
