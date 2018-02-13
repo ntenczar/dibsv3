@@ -1,15 +1,21 @@
 use rocket_contrib::Json;
+use diesel;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenv::dotenv;
 use std::env;
+use uuid::Uuid;
 
-use models::Queue;
+use models::{NewQueue, NewUser, Queue, User};
 use request::QueueRequest;
-use schema::queues::dsl::*;
+use schema::{queues, users};
 
 pub struct DibsDB {
     pool: Pool<ConnectionManager<PgConnection>>,
+}
+
+fn get_uuid() -> String {
+    format!("{}", Uuid::new_v4())
 }
 
 impl DibsDB {
@@ -26,30 +32,57 @@ impl DibsDB {
     }
 
     pub fn enqueue(&self, req_json: Json<QueueRequest>) {
-        let name = req_json.0.name;
-        let channel = req_json.0.channel;
-        let queue = self.get_or_create_queue(name.clone());
-
-        println!("{:?}", name);
-        println!("{:?}", channel);
-        println!("{:?}", queue);
+        let user_name = req_json.0.name;
+        let queue_name = req_json.0.channel;
+        println!("{:?}", user_name);
+        println!("{:?}", queue_name);
+        let queue: Queue = self.get_or_create_queue(queue_name.clone());
+        let conn = self.pool.get().unwrap();
+        let new_user = NewUser {
+            id: &get_uuid(),
+            queue_id: &queue.id,
+            user_id: &user_name,
+        };
+        println!("{:?}", new_user);
+        let _user: User = diesel::insert_into(users::table)
+            .values(&new_user)
+            .get_result(&conn)
+            .expect(&format!(
+                "Error inserting user {} into queue {}.",
+                user_name, queue_name
+            ));
     }
 
-    fn get_or_create_queue(&self, name: String) -> Queue {
-        match self.get_queue(name.clone()) {
+    fn get_or_create_queue(&self, queue_name: String) -> Queue {
+        match self.get_queue(queue_name.clone()) {
             Some(q) => q,
-            None => self.create_queue(name),
+            None => self.create_queue(queue_name),
         }
     }
 
-    fn create_queue(&self, name: String) -> Queue {
-        return Queue::new(name);
+    fn create_queue(&self, queue_name: String) -> Queue {
+        let conn = self.pool.get().unwrap();
+        let new_queue = NewQueue {
+            id: &get_uuid(),
+            title: &queue_name,
+        };
+
+        return diesel::insert_into(queues::table)
+            .values(&new_queue)
+            .get_result(&conn)
+            .expect("Error creating new queue.");
     }
 
     fn get_queue(&self, name: String) -> Option<Queue> {
         let conn = self.pool.get().unwrap();
-        let q = queues.filter(title.eq(name)).load::<Queue>(&conn);
-        println!("{:?}", q);
-        return None;
+        match queues::dsl::queues
+            .filter(queues::dsl::title.eq(name))
+            .load::<Queue>(&conn)
+            .expect("Failed to query queues table.")
+            .first()
+        {
+            Some(q_ref) => Some((*q_ref).clone()),
+            None => None,
+        }
     }
 }

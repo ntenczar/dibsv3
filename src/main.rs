@@ -4,6 +4,7 @@
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate uuid;
 
 extern crate rocket;
 extern crate rocket_contrib;

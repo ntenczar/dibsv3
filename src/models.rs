@@ -1,22 +1,30 @@
-#[derive(Queryable, Debug)]
+use schema::{queues, users};
+
+#[derive(Identifiable, Queryable, Debug, Clone, Associations)]
 pub struct Queue {
-    id: i32,
-    title: String,
-    is_frozen: bool,
+    pub id: String,
+    pub title: String,
+    pub is_frozen: bool,
 }
 
-impl Queue {
-    pub fn new(channel_name: String) -> Queue {
-        return Queue {
-            id: 0,
-            title: channel_name,
-            is_frozen: false,
-        };
-    }
+#[derive(Identifiable, Queryable, Debug)]
+pub struct User {
+    pub id: String,
+    pub user_id: String,
+    pub queue_id: String,
 }
 
-#[derive(Queryable, Debug)]
-pub struct QueueUser {
-    user_id: String,
-    timestamp: String,
+#[derive(Insertable, Debug)]
+#[table_name = "users"]
+pub struct NewUser<'a> {
+    pub id: &'a str,
+    pub user_id: &'a str,
+    pub queue_id: &'a str,
+}
+
+#[derive(Insertable, Debug)]
+#[table_name = "queues"]
+pub struct NewQueue<'a> {
+    pub id: &'a str,
+    pub title: &'a str,
 }
