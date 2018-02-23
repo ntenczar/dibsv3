@@ -1,5 +1,6 @@
 use rocket_contrib::Json;
-use diesel;
+use diesel::pg::Pg;
+use diesel::{debug_query, insert_into};
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenv::dotenv;
@@ -34,23 +35,20 @@ impl DibsDB {
     pub fn enqueue(&self, req_json: Json<QueueRequest>) {
         let user_name = req_json.0.name;
         let queue_name = req_json.0.channel;
-        println!("{:?}", user_name);
-        println!("{:?}", queue_name);
         let queue: Queue = self.get_or_create_queue(queue_name.clone());
         let conn = self.pool.get().unwrap();
-        let new_user = NewUser {
+        let user: NewUser = NewUser {
             id: &get_uuid(),
-            queue_id: &queue.id,
             user_id: &user_name,
+            queue_id: &queue.id,
         };
-        println!("{:?}", new_user);
-        let _user: User = diesel::insert_into(users::table)
-            .values(&new_user)
-            .get_result(&conn)
-            .expect(&format!(
-                "Error inserting user {} into queue {}.",
-                user_name, queue_name
-            ));
+        let query = insert_into(users::table).values(&user);
+        let debug = debug_query::<Pg, _>(&query);
+        println!("{:?}", debug);
+        let _user: User = query.get_result(&conn).expect(&format!(
+            "Error inserting user {} into queue {}.",
+            user_name, queue_name
+        ));
     }
 
     fn get_or_create_queue(&self, queue_name: String) -> Queue {
@@ -67,7 +65,7 @@ impl DibsDB {
             title: &queue_name,
         };
 
-        return diesel::insert_into(queues::table)
+        return insert_into(queues::table)
             .values(&new_queue)
             .get_result(&conn)
             .expect("Error creating new queue.");

@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use schema::{queues, users};
 
 #[derive(Identifiable, Queryable, Debug, Clone, Associations)]
@@ -5,6 +7,7 @@ pub struct Queue {
     pub id: String,
     pub title: String,
     pub is_frozen: bool,
+    pub created_at: SystemTime,
 }
 
 #[derive(Identifiable, Queryable, Debug)]
@@ -12,6 +15,7 @@ pub struct User {
     pub id: String,
     pub user_id: String,
     pub queue_id: String,
+    pub created_at: SystemTime,
 }
 
 #[derive(Insertable, Debug)]

@@ -3,6 +3,7 @@ table! {
         id -> Varchar,
         title -> Varchar,
         frozen -> Bool,
+        created_at -> Timestamp,
     }
 }
 
@@ -11,6 +12,7 @@ table! {
         id -> Varchar,
         user_id -> Varchar,
         queue_id -> Varchar,
+        created_at -> Timestamp,
     }
 }
 
