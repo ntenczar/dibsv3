@@ -10,8 +10,8 @@ installer](https://www.rustup.rs/).
 
 The database is a combination of Postgres + Diesel ORM
 
-[Diesel](http://diesel.rs/guides/getting-started/)
-[Postgres](https://www.postgresql.org/)
+- [Diesel](http://diesel.rs/guides/getting-started/)
+- [Postgres](https://www.postgresql.org/)
 
 Once the Diesel CLI is set up, create a `.env` file with the following contents:
 
