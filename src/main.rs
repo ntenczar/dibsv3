@@ -34,10 +34,19 @@ fn queue(
     return status::Accepted::<()>(None);
 }
 
+#[post("/dequeue", format = "application/json", data = "<queue_request>")]
+fn dequeue(
+    db: State<DibsDB>,
+    queue_request: Json<QueueRequest>,
+) -> status::Accepted<()> {
+    db.dequeue(queue_request);
+    return status::Accepted::<()>(None);
+}
+
 fn main() {
     let db = DibsDB::new();
     rocket::ignite()
         .manage(db)
-        .mount("/", routes![queue])
+        .mount("/", routes![queue, dequeue])
         .launch();
 }
