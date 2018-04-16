@@ -9,6 +9,7 @@ extern crate uuid;
 extern crate rocket;
 extern crate rocket_contrib;
 
+extern crate chrono;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
@@ -43,10 +44,15 @@ fn dequeue(
     return status::Accepted::<()>(None);
 }
 
+#[get("/show/<queue_name>")]
+fn show(db: State<DibsDB>, queue_name: String) -> Option<String> {
+    return db.show(queue_name);
+}
+
 fn main() {
     let db = DibsDB::new();
     rocket::ignite()
         .manage(db)
-        .mount("/", routes![queue, dequeue])
+        .mount("/", routes![queue, dequeue, show])
         .launch();
 }

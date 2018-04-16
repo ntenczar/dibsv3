@@ -41,6 +41,17 @@ impl DibsDB {
         return DibsDB { pool: pool };
     }
 
+    pub fn show(&self, queue_name: String) -> Option<String> {
+        let queue = self.get_queue(queue_name);
+        match queue {
+            Some(q) => {
+                let users = self.get_users_for_queue(q.clone().id);
+                return Some(q.show(users));
+            }
+            None => None,
+        }
+    }
+
     pub fn enqueue(&self, req_json: Json<QueueRequest>) {
         let user_name = req_json.0.name;
         let queue_name = req_json.0.channel;
@@ -89,16 +100,17 @@ impl DibsDB {
             title: &queue_name,
         };
 
-        return insert_into(queues::table)
-            .values(&new_queue)
-            .get_result(&conn)
-            .expect("Error creating new queue.");
+        let query = insert_into(queues::table).values(&new_queue);
+        debug_query!(query);
+
+        return query.get_result(&conn).expect("Error creating new queue.");
     }
 
     fn get_queue(&self, name: String) -> Option<Queue> {
         let conn = self.pool.get().unwrap();
-        match queues::dsl::queues
-            .filter(queues::dsl::title.eq(name))
+        let query = queues::dsl::queues.filter(queues::dsl::title.eq(name));
+        debug_query!(query);
+        match query
             .load::<Queue>(&conn)
             .expect("Failed to query queues table.")
             .first()
@@ -106,5 +118,14 @@ impl DibsDB {
             Some(q_ref) => Some((*q_ref).clone()),
             None => None,
         }
+    }
+
+    fn get_users_for_queue(&self, queue_id: String) -> Vec<User> {
+        let conn = self.pool.get().unwrap();
+        let query = users::dsl::users.filter(users::dsl::queue_id.eq(queue_id));
+        debug_query!(query);
+        return query
+            .load::<User>(&conn)
+            .expect("Failed to get users for queue.");
     }
 }
