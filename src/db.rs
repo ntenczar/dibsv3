@@ -1,4 +1,3 @@
-use rocket_contrib::Json;
 use diesel::pg::Pg;
 use diesel::{debug_query, delete, insert_into};
 use diesel::prelude::*;
@@ -8,10 +7,10 @@ use std::env;
 use uuid::Uuid;
 
 use models::{NewQueue, NewUser, Queue, User};
-use request::QueueRequest;
 use schema::{queues, users};
 
 pub struct DibsDB {
+    pub slack_token: String,
     pool: Pool<ConnectionManager<PgConnection>>,
 }
 
@@ -38,7 +37,12 @@ impl DibsDB {
         let pool = Pool::builder()
             .build(manager)
             .expect("Failed to create pool.");
-        return DibsDB { pool: pool };
+        let slack_token =
+            env::var("SLACK_TOKEN").expect("SLACK_TOKEN is undefined.");
+        return DibsDB {
+            pool: pool,
+            slack_token: slack_token,
+        };
     }
 
     pub fn show(&self, queue_name: String) -> Option<String> {
@@ -52,9 +56,7 @@ impl DibsDB {
         }
     }
 
-    pub fn enqueue(&self, req_json: Json<QueueRequest>) {
-        let user_name = req_json.0.name;
-        let queue_name = req_json.0.channel;
+    pub fn enqueue(&self, user_name: String, queue_name: String) {
         let queue: Queue = self.get_or_create_queue(queue_name.clone());
         let conn = self.pool.get().unwrap();
         let user: NewUser = NewUser {
@@ -70,10 +72,8 @@ impl DibsDB {
         ));
     }
 
-    pub fn dequeue(&self, req_json: Json<QueueRequest>) {
+    pub fn dequeue(&self, user_name: String, queue_name: String) {
         let conn = self.pool.get().unwrap();
-        let user_name = req_json.0.name;
-        let queue_name = req_json.0.channel;
         let queue: Queue = self.get_or_create_queue(queue_name.clone());
         let query = delete(
             users::dsl::users.filter(
