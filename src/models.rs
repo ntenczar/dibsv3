@@ -11,34 +11,25 @@ pub struct Queue {
     pub created_at: SystemTime,
 }
 
-fn zero_pad(num: i64) -> String {
-    if num < 10 {
-        format!("0{}", num)
-    } else {
-        format!("{}", num)
-    }
-}
-
 impl Queue {
     pub fn show(&self, users: Vec<User>) -> String {
-        let header = format!("{} Queue \n============ \n", self.title);
+        let queue_name = format!("<#{}>", self.title);
+        let header = format!("{} queue \n============", queue_name);
         let mut body = String::from("");
         if users.len() == 0 {
-            return format!("{} Queue is Empty.", self.title);
+            return format!("{} queue is empty.", queue_name);
         }
         let now: DateTime<Utc> = Utc::now();
+        let mut position = 1;
         for u in users {
-            let formatted_user = u.show(now);
-            body = format!(
-                "{} in queue for {:?}\\n {}",
-                u.user_id, formatted_user, body
-            );
+            body = format!("{} {}. {} \n", body, position, u.show(now));
+            position += 1;
         }
-        return format!("{}\\n {}", header, body);
+        return format!("{} \n {}", header, body);
     }
 }
 
-#[derive(Identifiable, Queryable, Debug)]
+#[derive(Identifiable, Queryable, Clone, Debug)]
 pub struct User {
     pub id: String,
     pub user_id: String,
@@ -53,9 +44,13 @@ impl User {
         let hours = diff.num_hours();
         let minutes = diff.num_minutes() - (hours * 60);
         let seconds = diff.num_seconds() - (hours * 3600) - (minutes * 60);
-        let fmt_minutes = zero_pad(minutes);
-        let fmt_seconds = zero_pad(seconds);
-        return format!("{}:{}:{}", hours, fmt_minutes, fmt_seconds);
+        let time_in_queue;
+        if hours == 0 {
+            time_in_queue = format!("{}m{}s", minutes, seconds);
+        } else {
+            time_in_queue = format!("{}h{}m{}s", hours, minutes, seconds);
+        }
+        return format!("<@{}> in queue for {}", self.user_id, time_in_queue);
     }
 }
 
