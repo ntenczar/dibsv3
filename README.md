@@ -17,6 +17,7 @@ Once the Diesel CLI is set up, create a `.env` file with the following contents:
 
 ```
 DATABASE_URL=postgres://dibs:admin@localhost/dibs
+SLACK_TOKEN=some_valid_slack_token
 ```
 
 ```
