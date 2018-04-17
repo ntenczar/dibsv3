@@ -45,14 +45,14 @@ impl DibsDB {
         };
     }
 
-    pub fn show(&self, queue_name: String) -> Option<String> {
-        let queue = self.get_queue(queue_name);
+    pub fn show(&self, queue_name: String) -> String {
+        let queue = self.get_queue(queue_name.clone());
         match queue {
             Some(q) => {
                 let users = self.get_users_for_queue(q.clone().id);
-                return Some(q.show(users));
+                return q.show(users);
             }
-            None => None,
+            None => format!("{} Queue is Empty.", queue_name),
         }
     }
 

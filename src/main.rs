@@ -25,22 +25,63 @@ use rocket::request::{Form, State};
 use db::DibsDB;
 use request::DibsRequest;
 
-fn show_request(dibs_request: DibsRequest) -> () {}
-fn queue_request(dibs_request: DibsRequest) -> () {}
-fn dequeue_request(dibs_request: DibsRequest) -> () {}
+macro_rules! debug_request {
+    ($req:expr) => {
+        if cfg!(debug_assertions) {
+            println!("{:?}", &$req);
+        }
+    };
+}
+
+fn show_request(
+    db: State<DibsDB>,
+    request: DibsRequest,
+) -> Result<String, BadRequest<String>> {
+    let queue_name = request.channel_id;
+    return Ok(db.show(queue_name));
+}
+
+fn queue_request(
+    db: State<DibsDB>,
+    request: DibsRequest,
+) -> Result<String, BadRequest<String>> {
+    let user_name = request.user_id;
+    let queue_name = request.channel_id;
+    db.enqueue(user_name, queue_name.clone());
+
+    return Ok(db.show(queue_name));
+}
+
+fn dequeue_request(
+    db: State<DibsDB>,
+    request: DibsRequest,
+) -> Result<String, BadRequest<String>> {
+    let user_name = request.user_id;
+    let queue_name = request.channel_id;
+    db.dequeue(user_name, queue_name.clone());
+
+    return Ok(db.show(queue_name));
+}
 
 #[post("/", format = "application/x-www-form-urlencoded",
        data = "<dibs_request>")]
 fn main_request(
     db: State<DibsDB>,
     dibs_request: Form<DibsRequest>,
-) -> Result<&'static str, BadRequest<String>> {
+) -> Result<String, BadRequest<String>> {
     let request = dibs_request.into_inner();
     if request.token != db.slack_token {
         return Err(BadRequest(Some(format!("Invalid slack token."))));
     }
-    println!("{:?}", request);
-    return Ok("Success");
+    debug_request!(request);
+    match request.text.as_ref() {
+        "show" => show_request(db, request),
+        "" => queue_request(db, request),
+        "queue" => queue_request(db, request),
+        "dequeue" => dequeue_request(db, request),
+        "done" => dequeue_request(db, request),
+        _ => Ok(format!("not yet implemented")),
+    }
 }
 
 fn main() {
