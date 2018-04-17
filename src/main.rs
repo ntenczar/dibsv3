@@ -19,6 +19,7 @@ mod models;
 mod request;
 mod schema;
 
+use rocket_contrib::Json;
 use rocket::response::status::BadRequest;
 use rocket::request::{Form, State};
 
@@ -33,34 +34,58 @@ macro_rules! debug_request {
     };
 }
 
+#[derive(Serialize, Deserialize)]
+struct SlackResponse {
+    text: String,
+    response_type: String,
+}
+
 fn show_request(
     db: State<DibsDB>,
     request: DibsRequest,
-) -> Result<String, BadRequest<String>> {
+) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let queue_name = request.channel_id;
-    return Ok(db.show(queue_name));
+    let response = SlackResponse {
+        text: db.show(queue_name),
+        response_type: format!("ephemeral"),
+    };
+    return Ok(Json(response));
 }
 
 fn queue_request(
     db: State<DibsDB>,
     request: DibsRequest,
-) -> Result<String, BadRequest<String>> {
+) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let user_name = request.user_id;
     let queue_name = request.channel_id;
-    db.enqueue(user_name, queue_name.clone());
-
-    return Ok(db.show(queue_name));
+    db.enqueue(user_name.clone(), queue_name.clone());
+    let response = SlackResponse {
+        text: format!(
+            "<@{}> has joined the queue. \n {}",
+            user_name,
+            db.show(queue_name),
+        ),
+        response_type: format!("in_channel"),
+    };
+    return Ok(Json(response));
 }
 
 fn dequeue_request(
     db: State<DibsDB>,
     request: DibsRequest,
-) -> Result<String, BadRequest<String>> {
+) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let user_name = request.user_id;
     let queue_name = request.channel_id;
-    db.dequeue(user_name, queue_name.clone());
-
-    return Ok(db.show(queue_name));
+    db.dequeue(user_name.clone(), queue_name.clone());
+    let response = SlackResponse {
+        text: format!(
+            "<@{}> has left the queue. \n {}",
+            user_name,
+            db.show(queue_name)
+        ),
+        response_type: format!("in_channel"),
+    };
+    return Ok(Json(response));
 }
 
 #[post("/", format = "application/x-www-form-urlencoded",
@@ -68,7 +93,7 @@ fn dequeue_request(
 fn main_request(
     db: State<DibsDB>,
     dibs_request: Form<DibsRequest>,
-) -> Result<String, BadRequest<String>> {
+) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let request = dibs_request.into_inner();
     if request.token != db.slack_token {
         return Err(BadRequest(Some(format!("Invalid slack token."))));
@@ -80,7 +105,7 @@ fn main_request(
         "queue" => queue_request(db, request),
         "dequeue" => dequeue_request(db, request),
         "done" => dequeue_request(db, request),
-        _ => Ok(format!("not yet implemented")),
+        _ => Err(BadRequest(Some(format!("not yet implemented")))),
     }
 }
 

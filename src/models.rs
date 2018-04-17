@@ -14,20 +14,22 @@ pub struct Queue {
 impl Queue {
     pub fn show(&self, users: Vec<User>) -> String {
         let queue_name = format!("<#{}>", self.title);
-        let header = format!("{} Queue \n============", queue_name);
+        let header = format!("{} queue \n============", queue_name);
         let mut body = String::from("");
         if users.len() == 0 {
-            return format!("{} Queue is Empty.", queue_name);
+            return format!("{} queue is empty.", queue_name);
         }
         let now: DateTime<Utc> = Utc::now();
+        let mut position = 1;
         for u in users {
-            body = format!("{} \n {}", u.show(now), body);
+            body = format!("{} {}. {} \n", body, position, u.show(now));
+            position += 1;
         }
         return format!("{} \n {}", header, body);
     }
 }
 
-#[derive(Identifiable, Queryable, Debug)]
+#[derive(Identifiable, Queryable, Clone, Debug)]
 pub struct User {
     pub id: String,
     pub user_id: String,
