@@ -4,12 +4,10 @@ version = "0.0.2"
 authors = ["Nate Tenczar <ntenczar@gmail.com>"]
 
 [dependencies]
-rocket = "0.3.12"
-rocket_codegen = "0.3.12"
-rocket_contrib = "0.3.12"
+rocket = "0.4.0"
+rocket_contrib = "0.4.0"
 serde = "1.0"
 serde_derive = "1.0"
-diesel = { version = "~1.2.0", features = ["postgres", "r2d2"] }
 dotenv = "0.9.0"
 uuid = { version = "0.6.0-beta", features = ["v4"] }
 chrono = "0.4"

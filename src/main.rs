@@ -1,25 +1,21 @@
-#![feature(plugin, decl_macro, core_intrinsics, custom_derive)]
-#![plugin(rocket_codegen)]
+#![feature(proc_macro_hygiene, plugin, decl_macro, core_intrinsics,
+           custom_attribute)]
+#[macro_use]
+extern crate rocket;
 
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+
 extern crate uuid;
-
-extern crate rocket;
 extern crate rocket_contrib;
-
 extern crate chrono;
-#[macro_use]
-extern crate diesel;
 extern crate dotenv;
 
 mod db;
 mod models;
 mod request;
-mod schema;
-
-use rocket_contrib::Json;
+use rocket_contrib::json::Json;
 use rocket::response::status::BadRequest;
 use rocket::request::{Form, State};
 
@@ -46,7 +42,7 @@ fn show_request(
 ) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let queue_name = request.channel_id;
     let response = SlackResponse {
-        text: db.show(queue_name),
+        text: db.show_queue(queue_name),
         response_type: format!("ephemeral"),
     };
     return Ok(Json(response));
@@ -63,7 +59,7 @@ fn queue_request(
         text: format!(
             "<@{}> has joined the queue. \n {}",
             user_name,
-            db.show(queue_name),
+            db.show_queue(queue_name),
         ),
         response_type: format!("in_channel"),
     };
@@ -81,7 +77,7 @@ fn dequeue_request(
         text: format!(
             "<@{}> has left the queue. \n {}",
             user_name,
-            db.show(queue_name)
+            db.show_queue(queue_name)
         ),
         response_type: format!("in_channel"),
     };
