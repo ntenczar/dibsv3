@@ -1,7 +1,6 @@
 use dotenv::dotenv;
 use std::env;
 use std::collections::{HashMap};
-use uuid::Uuid;
 
 use models::{Queue};
 
