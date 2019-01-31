@@ -18,6 +18,7 @@ mod request;
 use rocket_contrib::json::Json;
 use rocket::response::status::BadRequest;
 use rocket::request::{Form, State};
+use std::sync::RwLock;
 
 use db::DibsDB;
 use request::DibsRequest;
@@ -37,7 +38,7 @@ struct SlackResponse {
 }
 
 fn show_request(
-    db: State<DibsDB>,
+    db: &DibsDB,
     request: DibsRequest,
 ) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let queue_name = request.channel_id;
@@ -49,7 +50,7 @@ fn show_request(
 }
 
 fn queue_request(
-    db: State<DibsDB>,
+    db: &mut DibsDB,
     request: DibsRequest,
 ) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let user_name = request.user_id;
@@ -67,7 +68,7 @@ fn queue_request(
 }
 
 fn dequeue_request(
-    db: State<DibsDB>,
+    db: &mut DibsDB,
     request: DibsRequest,
 ) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let user_name = request.user_id;
@@ -87,28 +88,37 @@ fn dequeue_request(
 #[post("/", format = "application/x-www-form-urlencoded",
        data = "<dibs_request>")]
 fn main_request(
-    db: State<DibsDB>,
+    db_state: State<RwLock<DibsDB>>,
     dibs_request: Form<DibsRequest>,
 ) -> Result<Json<SlackResponse>, BadRequest<String>> {
     let request = dibs_request.into_inner();
-    if request.token != db.slack_token {
+    if request.token != db_state.read().unwrap().slack_token {
         return Err(BadRequest(Some(format!("Invalid slack token."))));
     }
     debug_request!(request);
     match request.text.as_ref() {
-        "show" => show_request(db, request),
-        "" => queue_request(db, request),
-        "queue" => queue_request(db, request),
-        "dequeue" => dequeue_request(db, request),
-        "done" => dequeue_request(db, request),
-        _ => Err(BadRequest(Some(format!("not yet implemented")))),
+        "show" => {
+            let db = db_state.read().unwrap();
+            show_request(&db, request)
+        },
+        _ => {
+            let db: &mut DibsDB = &mut db_state.write().unwrap();
+            return match request.text.as_ref() {
+                "" => queue_request(db, request),
+                "queue" => queue_request(db, request),
+                "dequeue" => dequeue_request(db, request),
+                "done" => dequeue_request(db, request),
+                _ => Err(BadRequest(Some(format!("not yet implemented")))),
+            }
+        }
     }
 }
 
 fn main() {
     let db = DibsDB::new();
+    let db_lock = RwLock::new(db);
     rocket::ignite()
-        .manage(db)
+        .manage(db_lock)
         .mount("/", routes![main_request])
         .launch();
 }

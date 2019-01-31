@@ -1,7 +1,7 @@
 use std::collections::{HashMap};
 use chrono::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Queue {
     pub id: String,
     pub is_frozen: bool,
@@ -34,15 +34,35 @@ impl Queue {
         }
         return format!("{} \n {}", header, body);
     }
+
+    pub fn enqueue(&mut self, user_name: String) {
+        // TODO(nate): check that not already queued?
+        let user = User::new(user_name.clone());
+        self.users.insert(user_name, user);
+    }
+
+    pub fn dequeue(&mut self, user_name: String) -> bool {
+        match self.users.remove(&user_name) {
+            Some(_u) => true,
+            None => false
+        }
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct User {
     pub id: String,
     pub queue_time: DateTime<Utc>
 }
 
 impl User {
+    pub fn new(name: String) -> Self {
+        return User {
+            id: name,
+            queue_time: Utc::now()
+        };
+    }
+
     pub fn show(&self, now: DateTime<Utc>) -> String {
         let created_at: DateTime<Utc> = self.queue_time;
         let diff = now.signed_duration_since(created_at);

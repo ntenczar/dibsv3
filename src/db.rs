@@ -10,10 +10,6 @@ pub struct DibsDB {
     queues: HashMap<String, Queue>
 }
 
-fn get_uuid() -> String {
-    format!("{}", Uuid::new_v4())
-}
-
 impl DibsDB {
     pub fn new() -> Self {
         dotenv().ok();
@@ -27,32 +23,30 @@ impl DibsDB {
     }
 
     pub fn show_queue(&self, queue_name: String) -> String {
-        let queue = self.queues.get(&queue_name);
-        match queue {
-            Some(q) => {
-                return q.show();
-            }
-            None => format!("{} Queue is Empty.", queue_name),
+        let queue = self.get_or_create_queue(queue_name);
+        return queue.show();
+    }
+
+    pub fn enqueue(&mut self, user_name: String, queue_name: String) {
+        let mut queue = self.get_or_create_queue(queue_name.clone());
+        queue.enqueue(user_name);
+        self.queues.insert(queue_name, queue);
+    }
+
+    pub fn dequeue(&mut self, user_name: String, queue_name: String) -> bool {
+        let mut queue = self.get_or_create_queue(queue_name.clone());
+        if queue.dequeue(user_name) {
+            self.queues.insert(queue_name, queue);
+            return true;
         }
-    }
-
-    pub fn enqueue(&self, user_name: String, queue_name: String) {
-        panic!("not yet implemented!");
-    }
-
-    pub fn dequeue(&self, user_name: String, queue_name: String) {
-        panic!("not yet implemented!");
+        return false;
     }
 
     fn get_or_create_queue(&self, queue_name: String) -> Queue {
-        panic!("not yet implemented!");
-    }
-
-    fn create_queue(&self, queue_name: String) -> Queue {
-        panic!("not yet implemented!");
-    }
-
-    fn get_queue(&self, name: String) -> Option<Queue> {
-        panic!("not yet implemented!");
+        let queue = self.queues.get(&queue_name);
+        match queue {
+            Some(q) => q.clone(),
+            None => Queue::new(queue_name)
+        }
     }
 }
