@@ -1,12 +1,12 @@
-use std::collections::{HashMap};
 use chrono::prelude::*;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Queue {
     pub id: String,
     pub is_frozen: bool,
     pub created_at: DateTime<Utc>,
-    pub users: HashMap<String, User>
+    pub users: HashMap<String, User>,
 }
 
 impl Queue {
@@ -15,7 +15,7 @@ impl Queue {
             id: name,
             is_frozen: false,
             created_at: Utc::now(),
-            users: HashMap::new()
+            users: HashMap::new(),
         };
     }
 
@@ -44,7 +44,7 @@ impl Queue {
     pub fn dequeue(&mut self, user_name: String) -> bool {
         match self.users.remove(&user_name) {
             Some(_u) => true,
-            None => false
+            None => false,
         }
     }
 }
@@ -52,14 +52,14 @@ impl Queue {
 #[derive(Debug, Clone)]
 pub struct User {
     pub id: String,
-    pub queue_time: DateTime<Utc>
+    pub queue_time: DateTime<Utc>,
 }
 
 impl User {
     pub fn new(name: String) -> Self {
         return User {
             id: name,
-            queue_time: Utc::now()
+            queue_time: Utc::now(),
         };
     }
 

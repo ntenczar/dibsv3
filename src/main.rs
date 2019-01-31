@@ -1,5 +1,10 @@
-#![feature(proc_macro_hygiene, plugin, decl_macro, core_intrinsics,
-           custom_attribute)]
+#![feature(
+    proc_macro_hygiene,
+    plugin,
+    decl_macro,
+    core_intrinsics,
+    custom_attribute
+)]
 #[macro_use]
 extern crate rocket;
 
@@ -7,17 +12,17 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 
-extern crate uuid;
-extern crate rocket_contrib;
 extern crate chrono;
 extern crate dotenv;
+extern crate rocket_contrib;
+extern crate uuid;
 
 mod db;
 mod models;
 mod request;
-use rocket_contrib::json::Json;
-use rocket::response::status::BadRequest;
 use rocket::request::{Form, State};
+use rocket::response::status::BadRequest;
+use rocket_contrib::json::Json;
 use std::sync::RwLock;
 
 use db::DibsDB;
@@ -85,8 +90,11 @@ fn dequeue_request(
     return Ok(Json(response));
 }
 
-#[post("/", format = "application/x-www-form-urlencoded",
-       data = "<dibs_request>")]
+#[post(
+    "/",
+    format = "application/x-www-form-urlencoded",
+    data = "<dibs_request>"
+)]
 fn main_request(
     db_state: State<RwLock<DibsDB>>,
     dibs_request: Form<DibsRequest>,
@@ -100,7 +108,7 @@ fn main_request(
         "show" => {
             let db = db_state.read().unwrap();
             show_request(&db, request)
-        },
+        }
         _ => {
             let db: &mut DibsDB = &mut db_state.write().unwrap();
             return match request.text.as_ref() {
@@ -109,7 +117,7 @@ fn main_request(
                 "dequeue" => dequeue_request(db, request),
                 "done" => dequeue_request(db, request),
                 _ => Err(BadRequest(Some(format!("not yet implemented")))),
-            }
+            };
         }
     }
 }

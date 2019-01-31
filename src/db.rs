@@ -1,12 +1,12 @@
 use dotenv::dotenv;
+use std::collections::HashMap;
 use std::env;
-use std::collections::{HashMap};
 
-use models::{Queue};
+use models::Queue;
 
 pub struct DibsDB {
     pub slack_token: String,
-    queues: HashMap<String, Queue>
+    queues: HashMap<String, Queue>,
 }
 
 impl DibsDB {
@@ -17,7 +17,7 @@ impl DibsDB {
             env::var("SLACK_TOKEN").expect("SLACK_TOKEN is undefined.");
         return DibsDB {
             slack_token: slack_token,
-            queues: HashMap::new()
+            queues: HashMap::new(),
         };
     }
 
@@ -45,7 +45,7 @@ impl DibsDB {
         let queue = self.queues.get(&queue_name);
         match queue {
             Some(q) => q.clone(),
-            None => Queue::new(queue_name)
+            None => Queue::new(queue_name),
         }
     }
 }
