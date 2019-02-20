@@ -2,7 +2,7 @@ use dotenv::dotenv;
 use std::collections::HashMap;
 use std::env;
 
-use models::Queue;
+use queue::Queue;
 
 pub struct DibsDB {
     pub slack_token: String,

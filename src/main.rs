@@ -18,7 +18,8 @@ extern crate rocket_contrib;
 extern crate uuid;
 
 mod db;
-mod models;
+mod queue;
+mod user;
 mod request;
 use rocket::request::{Form, State};
 use rocket::response::status::BadRequest;
