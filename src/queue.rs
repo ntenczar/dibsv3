@@ -2,7 +2,7 @@ use chrono::prelude::*;
 use std::collections::HashMap;
 use user::User;
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Queue {
     pub id: String,
     pub is_frozen: bool,
