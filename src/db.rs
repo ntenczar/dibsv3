@@ -54,19 +54,11 @@ impl DibsDB {
         return Ok(());
     }
 
-    fn loop_save_to_disk(&self) {
-        let mut retries = 0;
-        loop {
-            let res = self.save_to_disk();
-            match res {
-                Ok(_) => break,
-                Err(_) => (),
-            }
-            // TODO(nate): decide if this logic is reasonable
-            retries += 1;
-            if retries == 10 {
-                break;
-            }
+    fn try_save_to_disk(&self) {
+        let res = self.save_to_disk();
+        match res {
+            Ok(_) => (),
+            Err(_) => panic!("There is an issue saving the state to disk!"),
         }
     }
 
@@ -79,14 +71,14 @@ impl DibsDB {
         let mut queue = self.get_or_create_queue(queue_name.clone());
         queue.enqueue(user_name);
         self.queues.insert(queue_name, queue);
-        self.loop_save_to_disk();
+        self.try_save_to_disk();
     }
 
     pub fn dequeue(&mut self, user_name: String, queue_name: String) -> bool {
         let mut queue = self.get_or_create_queue(queue_name.clone());
         if queue.dequeue(user_name) {
             self.queues.insert(queue_name, queue);
-            self.loop_save_to_disk();
+            self.try_save_to_disk();
             return true;
         }
         return false;
