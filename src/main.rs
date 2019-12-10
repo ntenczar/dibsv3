@@ -1,10 +1,4 @@
-#![feature(
-    proc_macro_hygiene,
-    plugin,
-    decl_macro,
-    core_intrinsics,
-    custom_attribute
-)]
+#![feature(proc_macro_hygiene, plugin, decl_macro, core_intrinsics)]
 #[macro_use]
 extern crate rocket;
 
